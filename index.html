@@ -124,14 +124,26 @@ function Donut({ data, size=150 }){
 }
 function Bars({ data, height=160 }){
   const max = Math.max.apply(null, data.map(d=>d.total).concat([1]));
+  const [hover,setHover]=useState(null);
   return (
     <div className="flex items-end gap-2" style={{ height }}>
-      {data.map((d,i)=>(
-        <div key={i} className="flex-1 flex flex-col items-center" style={{ justifyContent:"flex-end", height:"100%" }}>
-          <div title={eur(d.total)} style={{ width:"68%", height:((d.total/max)*88+2)+"%", minHeight:2, background:"linear-gradient(180deg,"+C.accent+","+C.accent+"66)", borderRadius:"5px 5px 0 0", transition:"height .4s", boxShadow:"0 0 12px rgba(197,248,42,0.25)" }} />
-          <span style={{ fontSize:11, color:C.faint, fontFamily:FONT_MONO, marginTop:6 }}>{d.m}</span>
+      {data.map((d,i)=>{ const bh=(d.total/max)*88+2; const on=hover===i; return (
+        <div key={i} className="flex-1 flex flex-col items-center" style={{ justifyContent:"flex-end", height:"100%", position:"relative" }}
+          onMouseEnter={()=>setHover(i)} onMouseLeave={()=>setHover(null)}>
+          {on &&
+            <div style={{ position:"absolute", bottom:"calc("+bh+"% + 8px)", left:"50%", transform:"translateX(-50%)", whiteSpace:"nowrap",
+              background:"rgba(20,20,22,0.94)", border:"1px solid rgba(255,255,255,0.14)", borderRadius:8, padding:"5px 9px",
+              backdropFilter:"blur(8px)", boxShadow:"0 6px 22px rgba(0,0,0,0.55)", zIndex:5, pointerEvents:"none" }}>
+              <span style={{ fontSize:10.5, color:C.faint, textTransform:"capitalize", marginRight:6 }}>{d.m}</span>
+              <span style={{ fontSize:12.5, color:C.text, fontFamily:FONT_MONO, fontWeight:700 }}>{eur(d.total)}</span>
+            </div>}
+          <div style={{ width:"68%", height:bh+"%", minHeight:2, background:"linear-gradient(180deg,"+C.accent+","+C.accent+"66)", borderRadius:"5px 5px 0 0",
+            transition:"height .4s, filter .15s, transform .15s", transformOrigin:"bottom",
+            filter:on?"brightness(1.2)":"none", transform:on?"scaleY(1.02)":"none",
+            boxShadow:on?"0 0 18px rgba(197,248,42,0.45)":"0 0 12px rgba(197,248,42,0.25)", cursor:"default" }} />
+          <span style={{ fontSize:11, color:on?C.text:C.faint, fontFamily:FONT_MONO, marginTop:6, transition:"color .15s" }}>{d.m}</span>
         </div>
-      ))}
+      ); })}
     </div>
   );
 }
@@ -300,6 +312,10 @@ function Dashboard({ month, spentTotal, budgetTotal, subsMonthly, income, setInc
                 <span style={{ color:delta>=0?C.danger:C.good, fontFamily:FONT_MONO, fontWeight:700 }}>{Math.abs(delta).toFixed(1)}%</span>
                 <span style={{ color:"rgba(255,255,255,0.5)" }}>de dépenses vs mois dernier</span>
               </div>}
+            <div style={{ marginTop:14, fontSize:12, lineHeight:1.6, color:"rgba(255,255,255,0.55)", position:"relative", zIndex:1 }}>
+              Abonnements compris : <span style={{ fontFamily:FONT_MONO, color:"rgba(255,255,255,0.82)" }}>{eur(subsMonthly)}</span><br/>
+              <span style={{ fontFamily:FONT_MONO, color:C.accent, fontWeight:700 }}>{eur(spentTotal - subsMonthly)}</span> <span style={{ color:"rgba(255,255,255,0.6)" }}>de dépenses réelles (hors abos)</span>
+            </div>
             <div style={{ position:"absolute", bottom:0, left:0, right:0, opacity:0.6 }}><Spark data={trend} /></div>
           </Panel>
           <div className="flex flex-col gap-4">
